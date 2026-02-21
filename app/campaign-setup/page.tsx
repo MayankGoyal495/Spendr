@@ -12,6 +12,7 @@ import { Target, DollarSign, Globe, Clock, Users, Lightbulb, ArrowLeft } from 'l
 export default function CampaignSetupPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
+    campaignName: '',
     budget: '',
     productDescription: '',
     targetAudience: '',

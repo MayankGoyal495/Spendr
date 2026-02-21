@@ -1,6 +1,7 @@
 'use client'
+export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import {
   Crown
 } from 'lucide-react'
 
+/* ---------- tiers / plans (unchanged) ---------- */
 const tiers = [
   {
     name: "Playground",
@@ -84,10 +86,13 @@ const plans = {
   overdrive: tiers[2]
 }
 
-export default function PaymentPage() {
+/* ---------- Inner client component that uses useSearchParams ---------- */
+function PaymentClientInner() {
+  // Now it's safe to call useSearchParams() because this component
+  // will be rendered inside a Suspense boundary.
   const router = useRouter()
   const searchParams = useSearchParams()
-  const planType = searchParams.get('plan') as keyof typeof plans || 'kickstarter'
+  const planType = (searchParams.get('plan') as keyof typeof plans) || 'kickstarter'
   const plan = plans[planType]
 
   const [formData, setFormData] = useState({
@@ -267,7 +272,7 @@ export default function PaymentPage() {
                         placeholder="1234 5678 9012 3456"
                         value={formData.cardNumber}
                         onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
-                        className={errors.cardNumber ? 'border-red-500' : ''}
+                        className={errors.cardNumber ? 'border-red-500' : ''} 
                       />
                       {errors.cardNumber && (
                         <p className="text-sm text-red-600">{errors.cardNumber}</p>
@@ -537,5 +542,19 @@ export default function PaymentPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+/* ---------- Outer component: provides Suspense boundary ---------- */
+export default function PaymentPage() {
+  // Simple fallback while Suspense waits (should be fast)
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    }>
+      <PaymentClientInner />
+    </Suspense>
   )
 }
